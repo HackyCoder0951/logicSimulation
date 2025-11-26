@@ -15,6 +15,7 @@ The application has been migrated to a **Next.js** architecture and expanded wit
 - `components/CanvasWorkspace.js`: Core simulation engine and canvas rendering.
 - `components/TruthTable.js`: Dynamic truth table display.
 - `components/WaveformViewer.js`: Real-time signal history visualization.
+- `components/TestbenchModal.js`: Scriptable testbench runner.
 - `lib/Gate.js`: Logic gate class definition with support for complex components.
 - `lib/Wire.js`: Wire connection class definition.
 - `lib/examples.js`: Pre-built circuit templates.
@@ -48,6 +49,7 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Real-time Highlighting**: The row in the truth table matching your current switch inputs will be highlighted in **Blue**. Toggle switches to see the highlight move instantly.
     - **Resizable Panel**: Drag the top-left corner of the Truth Table panel to resize it.
     - **Waveform Viewer**: Switch to the **Waveform** tab to see a real-time timing diagram of your signals, similar to ModelSim.
+    - **Testbench Runner**: Click **Run Testbench** to open a script editor. Define a sequence of input changes (e.g., "At 100ns set A=1") and run it. The simulation executes instantly in virtual time, and the results are displayed in the Waveform Viewer.
 
 ## Running the App
 1. **Development**:
@@ -78,3 +80,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Highlighting**: Toggle switches and ensure the correct row in the truth table lights up.
     - **Resize**: Drag the truth table panel corner and verify it resizes correctly.
     - **Waveform**: Switch to the Waveform tab. Toggle switches or use a Clock. Verify the green lines trace the signal history.
+    - **Testbench**: Click "Run Testbench". Use the default script or write your own. Click Run. Verify the Waveform Viewer shows the exact sequence of events defined in the script.

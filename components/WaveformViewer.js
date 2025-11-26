@@ -1,7 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const WaveformViewer = ({ history, signals }) => {
     const canvasRef = useRef(null);
+    const [zoom, setZoom] = useState(2); // Pixels per frame (time unit)
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -28,7 +30,7 @@ const WaveformViewer = ({ history, signals }) => {
         // Draw Signals
         const rowHeight = 40;
         const padding = 10;
-        const timeScale = 2; // Pixels per frame
+        const timeScale = zoom; // Use state zoom
 
         // Calculate startX globally for all signals
         const contentWidth = history.length * timeScale;
@@ -118,8 +120,19 @@ const WaveformViewer = ({ history, signals }) => {
     }, []);
 
     return (
-        <div className="w-full h-full bg-slate-950 overflow-hidden relative">
+        <div className="w-full h-full bg-slate-950 overflow-hidden relative group">
             <canvas ref={canvasRef} className="block" />
+
+            {/* Zoom Controls */}
+            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800/80 p-1 rounded border border-slate-700">
+                <button onClick={() => setZoom(z => Math.max(0.5, z - 0.5))} className="p-1 hover:bg-slate-700 rounded text-slate-300">
+                    -
+                </button>
+                <span className="text-xs text-slate-400 flex items-center px-1">{zoom}x</span>
+                <button onClick={() => setZoom(z => Math.min(10, z + 0.5))} className="p-1 hover:bg-slate-700 rounded text-slate-300">
+                    +
+                </button>
+            </div>
         </div>
     );
 };

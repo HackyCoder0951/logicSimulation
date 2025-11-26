@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import CanvasWorkspace from '@/components/CanvasWorkspace';
 import TruthTable from '@/components/TruthTable';
 import WaveformViewer from '@/components/WaveformViewer';
+import TestbenchModal from '@/components/TestbenchModal';
 
 export default function Home() {
     const [selectedGateType, setSelectedGateType] = useState(null);
@@ -17,6 +18,10 @@ export default function Home() {
     const [waveformHistory, setWaveformHistory] = useState([]);
     const [monitoredSignals, setMonitoredSignals] = useState([]);
     const historyBufferRef = useRef([]);
+
+    // Testbench State
+    const [isTestbenchOpen, setIsTestbenchOpen] = useState(false);
+    const workspaceRef = useRef(null); // To access runTestbench
 
     const handleSignalUpdate = (frame, gates) => {
         // Update buffer
@@ -70,11 +75,33 @@ export default function Home() {
         document.removeEventListener('mouseup', handleResizeEnd);
     };
 
+    const handleRunTestbench = (script) => {
+        // Access runTestbench from canvas ref (hacky but effective)
+        // We need to find the canvas element's property we attached
+        const canvas = document.querySelector('canvas');
+        if (canvas && canvas.runTestbench) {
+            const result = canvas.runTestbench(script);
+            setWaveformHistory(result.history);
+            setMonitoredSignals(result.signals);
+            setActiveTab('waveform');
+        }
+    };
+
     return (
         <div className="flex h-screen w-full bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30">
             <Sidebar />
 
             <main className="flex-1 flex flex-col relative">
+                {/* Toolbar Extra */}
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => setIsTestbenchOpen(true)}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md shadow-lg font-medium hover:bg-purple-500 transition-all text-sm"
+                    >
+                        Run Testbench
+                    </button>
+                </div>
+
                 <CanvasWorkspace
                     onSelectionChange={setSelectedGateType}
                     onAnalyze={setCircuitTruthTable}
@@ -124,6 +151,13 @@ export default function Home() {
                         )}
                     </div>
                 </div>
+
+                <TestbenchModal
+                    isOpen={isTestbenchOpen}
+                    onClose={() => setIsTestbenchOpen(false)}
+                    onRun={handleRunTestbench}
+                    inputs={monitoredSignals.filter(s => !s.label.includes('Out') && !s.label.includes('Sum') && !s.label.includes('Cout')).map(s => s.label)}
+                />
             </main>
         </div>
     );

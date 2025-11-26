@@ -606,6 +606,85 @@ const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange, onS
         });
     };
 
+    const runTestbench = (script) => {
+        // 1. Identify Inputs
+        const inputs = gatesRef.current.filter(g => g.type === 'SWITCH');
+        const inputMap = {};
+        inputs.forEach(g => {
+            if (g.label) inputMap[g.label] = g;
+        });
+
+        // 2. Determine Duration
+        const maxTime = script.reduce((max, event) => Math.max(max, event.time), 0) + 100; // +100ns buffer
+
+        // 3. Simulation Loop (Virtual Time)
+        const history = [];
+        const signalsToMonitor = gatesRef.current.filter(g => g.type === 'SWITCH' || g.type === 'BULB' || g.type === 'CLOCK');
+
+        // Save current state
+        const savedStates = gatesRef.current.map(g => ({ id: g.id, state: g.state, value: g.inputs && g.inputs[0] ? g.inputs[0].value : 0 }));
+
+        // Sort events by time
+        const events = [...script].sort((a, b) => a.time - b.time);
+        let eventIdx = 0;
+
+        for (let t = 0; t <= maxTime; t++) {
+            // Apply Input Changes
+            while (eventIdx < events.length && events[eventIdx].time === t) {
+                const event = events[eventIdx];
+                Object.entries(event.inputs).forEach(([label, value]) => {
+                    const gate = inputMap[label];
+                    if (gate) {
+                        gate.state = !!value;
+                    }
+                });
+                eventIdx++;
+            }
+
+            // Step Physics
+            // We need multiple sub-steps to propagate logic instantly for this "nanosecond"
+            // Or we treat 1 loop iteration as 1 unit of propagation delay?
+            // Let's assume 1ns = 1 simulation tick for simplicity, but run compute multiple times to stabilize combinatorial logic
+            // if we want "instant" propagation.
+            // However, ModelSim shows propagation delay.
+            // Let's run 1 compute cycle per ns.
+
+            gatesRef.current.forEach(gate => gate.compute());
+            wiresRef.current.forEach(wire => wire.update());
+
+            // Record History
+            const frame = {};
+            signalsToMonitor.forEach(g => {
+                frame[g.id] = g.state ? 1 : 0;
+            });
+            history.push(frame);
+        }
+
+        // Restore State
+        gatesRef.current.forEach((g, i) => {
+            g.state = savedStates[i].state;
+            // restoring internal values is harder, but state is main thing
+        });
+
+        return {
+            history: history.reverse(), // Newest first for viewer? No, viewer expects newest at index 0?
+            // Wait, WaveformViewer expects history[0] to be newest.
+            // So we need to reverse the array we built (which is oldest first).
+            signals: signalsToMonitor.map(g => ({ id: g.id, label: g.label || g.type }))
+        };
+    };
+
+    // Expose runTestbench to parent via ref?
+    // Actually, better to use useImperativeHandle if we were using forwardRef, 
+    // but here we are not.
+    // Let's attach it to the window or pass a ref object from parent.
+    // Hacky but works:
+    useEffect(() => {
+        if (canvasRef.current) {
+            canvasRef.current.runTestbench = runTestbench;
+        }
+    }, []);
+
     return (
         <div className="flex-1 flex flex-col relative h-full">
             <div className="h-16 px-8 flex items-center justify-between pointer-events-none absolute top-0 right-0 w-full z-10">
