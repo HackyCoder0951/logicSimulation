@@ -110,8 +110,14 @@ export default function Home() {
                 />
 
                 {/* Floating Panel */}
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div
+                    className="absolute bottom-6 right-6 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col transition-none"
+                    style={{ width: panelSize.width, height: panelSize.height }}
+                >
+                    {/* Resize Handle */}
                     <div
+                        className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20 hover:bg-blue-500/50 rounded-br"
+                        onMouseDown={handleResizeStart}
                     />
 
                     {/* Tabs */}
