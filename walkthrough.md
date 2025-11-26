@@ -16,6 +16,7 @@ The application has been migrated to a **Next.js** architecture and expanded wit
 - `components/TruthTable.js`: Dynamic truth table display.
 - `lib/Gate.js`: Logic gate class definition with support for complex components.
 - `lib/Wire.js`: Wire connection class definition.
+- `lib/examples.js`: Pre-built circuit templates.
 
 ## Features
 - **Drag & Drop**: Drag gates from the sidebar to the canvas.
@@ -36,6 +37,11 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Manual Toggle**: Click any unconnected input pin to toggle it between 0 and 1.
     - **Rewiring**: Click a connected input pin to detach the wire and move it to another component.
     - **Visuals**: Pins light up Red when High (1). Switches show their state text.
+- **Circuit Management**:
+    - **Save/Load**: Save your current circuit to browser storage or load it back.
+    - **Export/Import**: Download your circuit as a `.json` file or upload one.
+    - **Examples**: Load pre-built templates like **Full Adders** (Basic, Half-Adder based, NAND-only) from the dropdown menu.
+    - **Multi-Selection**: Hold **Ctrl** (or **Cmd**) and click to select multiple gates, or drag a selection box around them. Move the entire group together.
 
 ## Running the App
 1. **Development**:
@@ -60,3 +66,5 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Deletion**: Select a gate and press Delete. Right-click a connected pin to clear wires.
     - **Zoom/Pan**: Use mouse wheel to zoom, middle click to pan. Verify gates stay in correct relative positions.
     - **Inputs**: Click unconnected inputs to toggle. Click connected inputs to move wires.
+    - **Examples**: Load the "Full Adder (Basic Gates)" example and verify it works.
+    - **Save/Load**: Save a circuit, clear, and load it back.

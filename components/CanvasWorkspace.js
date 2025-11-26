@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Gate } from '@/lib/Gate';
 import { Wire } from '@/lib/Wire';
+import { EXAMPLES } from '@/lib/examples';
 
 const CanvasWorkspace = ({ onSelectionChange }) => {
     const canvasRef = useRef(null);
@@ -24,6 +25,12 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
     const transformRef = useRef({ x: 0, y: 0, zoom: 1 });
     const isPanningRef = useRef(false);
     const lastMouseRef = useRef({ x: 0, y: 0 });
+
+    // Selection Box State
+    const isSelectingRef = useRef(false);
+    const selectionStartRef = useRef({ x: 0, y: 0 });
+    const selectionBoxRef = useRef(null); // {x, y, w, h}
+    const selectedGatesRef = useRef(new Set()); // Set of gate IDs
 
     // Coordinate Helpers
     const toWorld = (sx, sy) => {
@@ -107,7 +114,28 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
             }
 
             // Draw Gates
-            gatesRef.current.forEach(gate => gate.draw(ctx));
+            gatesRef.current.forEach(gate => {
+                // Highlight if in multi-selection
+                if (selectedGatesRef.current.has(gate)) {
+                    ctx.save();
+                    ctx.shadowColor = '#3b82f6';
+                    ctx.shadowBlur = 10;
+                    gate.draw(ctx);
+                    ctx.restore();
+                } else {
+                    gate.draw(ctx);
+                }
+            });
+
+            // Draw Selection Box
+            if (selectionBoxRef.current) {
+                const { x, y, w, h } = selectionBoxRef.current;
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 1;
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeRect(x, y, w, h);
+            }
 
             ctx.restore(); // Restore transform
 
@@ -195,29 +223,60 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                 mouseY >= gate.y && mouseY <= gate.y + gate.height) {
 
                 clickedGate = gate;
-
-                if (gate.type === 'SWITCH') {
-                    gate.state = !gate.state;
-                }
-
-                isDraggingRef.current = true;
-                draggedGateRef.current = gate;
-                dragOffsetRef.current = { x: mouseX - gate.x, y: mouseY - gate.y };
-
-                // Move to top
-                gatesRef.current.splice(i, 1);
-                gatesRef.current.push(gate);
                 break;
             }
         }
 
-        // Selection
-        gatesRef.current.forEach(g => g.selected = false);
         if (clickedGate) {
-            clickedGate.selected = true;
+            // Handle Gate Interaction
+            if (clickedGate.type === 'SWITCH') {
+                clickedGate.state = !clickedGate.state;
+            }
+
+            isDraggingRef.current = true;
+            draggedGateRef.current = clickedGate;
+            dragOffsetRef.current = { x: mouseX - clickedGate.x, y: mouseY - clickedGate.y };
+
+            // Multi-Selection Logic
+            if (e.ctrlKey || e.metaKey) {
+                // Toggle selection
+                if (selectedGatesRef.current.has(clickedGate)) {
+                    selectedGatesRef.current.delete(clickedGate);
+                    clickedGate.selected = false;
+                } else {
+                    selectedGatesRef.current.add(clickedGate);
+                    clickedGate.selected = true;
+                }
+            } else {
+                // If clicking an unselected gate without Ctrl, clear others
+                if (!selectedGatesRef.current.has(clickedGate)) {
+                    selectedGatesRef.current.clear();
+                    gatesRef.current.forEach(g => g.selected = false);
+                    selectedGatesRef.current.add(clickedGate);
+                    clickedGate.selected = true;
+                }
+                // If clicking a selected gate, keep selection for drag
+            }
+
+            // Move clicked to top (visual)
+            const idx = gatesRef.current.indexOf(clickedGate);
+            if (idx > -1) {
+                gatesRef.current.splice(idx, 1);
+                gatesRef.current.push(clickedGate);
+            }
+
             onSelectionChange(clickedGate.type);
         } else {
-            onSelectionChange(null);
+            // Clicked Empty Space -> Start Selection Box
+            if (!e.ctrlKey && !e.metaKey) {
+                selectedGatesRef.current.clear();
+                gatesRef.current.forEach(g => g.selected = false);
+                onSelectionChange(null);
+            }
+
+            isSelectingRef.current = true;
+            selectionStartRef.current = { x: mouseX, y: mouseY };
+            selectionBoxRef.current = { x: mouseX, y: mouseY, w: 0, h: 0 };
         }
     };
 
@@ -238,8 +297,43 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
         const { x: mouseX, y: mouseY } = toWorld(screenX, screenY);
 
         if (isDraggingRef.current && draggedGateRef.current) {
-            draggedGateRef.current.x = mouseX - dragOffsetRef.current.x;
-            draggedGateRef.current.y = mouseY - dragOffsetRef.current.y;
+            const dx = mouseX - dragOffsetRef.current.x - draggedGateRef.current.x;
+            const dy = mouseY - dragOffsetRef.current.y - draggedGateRef.current.y;
+
+            // Move all selected gates
+            selectedGatesRef.current.forEach(gate => {
+                gate.x += dx;
+                gate.y += dy;
+            });
+
+            // Update drag offset for the primary dragged gate to prevent drift
+            dragOffsetRef.current = { x: mouseX - draggedGateRef.current.x, y: mouseY - draggedGateRef.current.y };
+        }
+
+        if (isSelectingRef.current) {
+            const startX = selectionStartRef.current.x;
+            const startY = selectionStartRef.current.y;
+            const w = mouseX - startX;
+            const h = mouseY - startY;
+            selectionBoxRef.current = { x: startX, y: startY, w, h };
+
+            // Update selection
+            const absX = w > 0 ? startX : mouseX;
+            const absY = h > 0 ? startY : mouseY;
+            const absW = Math.abs(w);
+            const absH = Math.abs(h);
+
+            selectedGatesRef.current.clear();
+            gatesRef.current.forEach(gate => {
+                // Simple AABB intersection
+                if (gate.x < absX + absW && gate.x + gate.width > absX &&
+                    gate.y < absY + absH && gate.y + gate.height > absY) {
+                    selectedGatesRef.current.add(gate);
+                    gate.selected = true;
+                } else {
+                    gate.selected = false;
+                }
+            });
         }
 
         if (isWiringRef.current) {
@@ -274,6 +368,8 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
 
         isDraggingRef.current = false;
         draggedGateRef.current = null;
+        isSelectingRef.current = false;
+        selectionBoxRef.current = null;
     };
 
     const handleContextMenu = (e) => {
@@ -323,21 +419,140 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
     const clearCanvas = () => {
         gatesRef.current = [];
         wiresRef.current = [];
+        selectedGatesRef.current.clear();
         onSelectionChange(null);
+    };
+
+    // Serialization
+    const saveCircuit = () => {
+        const data = {
+            gates: gatesRef.current.map(g => ({
+                type: g.type, x: g.x, y: g.y, id: g.id, label: g.label, state: g.state
+            })),
+            wires: wiresRef.current.map(w => ({
+                startGateId: w.startGate.id,
+                startPin: w.startPinIndex,
+                endGateId: w.endGate.id,
+                endPin: w.endPinIndex
+            }))
+        };
+        localStorage.setItem('logicSimSave', JSON.stringify(data));
+        alert('Circuit Saved!');
+    };
+
+    const loadCircuit = (data = null) => {
+        try {
+            if (!data) {
+                const json = localStorage.getItem('logicSimSave');
+                if (!json) return;
+                data = JSON.parse(json);
+            }
+
+            // Reconstruct Gates
+            const newGates = data.gates.map(g => {
+                const gate = new Gate(g.x, g.y, g.type);
+                gate.id = g.id;
+                gate.label = g.label;
+                gate.state = g.state;
+                return gate;
+            });
+
+            // Reconstruct Wires
+            const newWires = [];
+            data.wires.forEach(w => {
+                const startGate = newGates.find(g => g.id === w.startGateId);
+                const endGate = newGates.find(g => g.id === w.endGateId);
+                if (startGate && endGate) {
+                    newWires.push(new Wire(startGate, w.startPin, endGate, w.endPin));
+                }
+            });
+
+            gatesRef.current = newGates;
+            wiresRef.current = newWires;
+            selectedGatesRef.current.clear();
+            onSelectionChange(null);
+        } catch (e) {
+            console.error('Failed to load', e);
+            alert('Failed to load circuit');
+        }
+    };
+
+    const exportCircuit = () => {
+        const data = {
+            gates: gatesRef.current.map(g => ({
+                type: g.type, x: g.x, y: g.y, id: g.id, label: g.label, state: g.state
+            })),
+            wires: wiresRef.current.map(w => ({
+                startGateId: w.startGate.id,
+                startPin: w.startPinIndex,
+                endGateId: w.endGate.id,
+                endPin: w.endPinIndex
+            }))
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'circuit.json';
+        a.click();
+    };
+
+    const importCircuit = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => loadCircuit(JSON.parse(e.target.result));
+        reader.readAsText(file);
+    };
+
+    const loadExample = (key) => {
+        const ex = EXAMPLES[key];
+        if (ex) {
+            // Map example format to save format
+            // Example format uses string IDs for start/end, save format uses IDs
+            // Actually my example format is slightly different, let's adapt it
+            const data = {
+                gates: ex.gates,
+                wires: ex.wires.map(w => ({
+                    startGateId: w.start,
+                    startPin: w.startPin,
+                    endGateId: w.end,
+                    endPin: w.endPin
+                }))
+            };
+            loadCircuit(data);
+        }
     };
 
     return (
         <div className="flex-1 flex flex-col relative h-full">
-            <div className="h-16 px-8 flex items-center justify-end pointer-events-none absolute top-0 right-0 w-full z-10">
-                <div className="pointer-events-auto flex gap-4 bg-slate-800 p-2 rounded-lg border border-slate-700 shadow-lg">
+            <div className="h-16 px-8 flex items-center justify-between pointer-events-none absolute top-0 right-0 w-full z-10">
+                <div className="pointer-events-auto flex gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700 shadow-lg mt-4">
+                    <select
+                        className="bg-slate-900 text-slate-200 text-xs p-2 rounded border border-slate-700 outline-none"
+                        onChange={(e) => loadExample(e.target.value)}
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Load Example...</option>
+                        {Object.entries(EXAMPLES).map(([k, v]) => (
+                            <option key={k} value={k}>{v.name}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="pointer-events-auto flex gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700 shadow-lg mt-4">
+                    <button onClick={saveCircuit} className="text-xs text-slate-300 hover:text-white px-3 py-1 bg-slate-700 rounded">Save</button>
+                    <button onClick={() => loadCircuit()} className="text-xs text-slate-300 hover:text-white px-3 py-1 bg-slate-700 rounded">Load</button>
+                    <button onClick={exportCircuit} className="text-xs text-slate-300 hover:text-white px-3 py-1 bg-slate-700 rounded">Export</button>
+                    <label className="text-xs text-slate-300 hover:text-white px-3 py-1 bg-slate-700 rounded cursor-pointer">
+                        Import
+                        <input type="file" className="hidden" accept=".json" onChange={importCircuit} />
+                    </label>
+                    <div className="w-px bg-slate-600 mx-1"></div>
                     <button
                         onClick={clearCanvas}
-                        className="text-slate-400 hover:text-slate-50 hover:bg-slate-900 px-4 py-2 rounded-md transition-colors font-medium"
+                        className="text-slate-400 hover:text-red-400 px-3 py-1 transition-colors font-medium text-xs"
                     >
                         Clear
-                    </button>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-[0_0_12px_rgba(59,130,246,0.5)] font-medium">
-                        Simulate
                     </button>
                 </div>
             </div>
