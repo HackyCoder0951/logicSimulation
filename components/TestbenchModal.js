@@ -37,19 +37,45 @@ const TestbenchModal = ({ isOpen, onClose, onRun, inputs }) => {
     // Default example script
     useEffect(() => {
         if (isOpen && !script) {
+            // User requested specific 5-step pattern:
+            // 0: 00, 100: 01, 200: 10, 300: 11, 400: 00
             const example = [
                 { time: 0, inputs: {} },
                 { time: 100, inputs: {} },
-                { time: 200, inputs: {} }
+                { time: 200, inputs: {} },
+                { time: 300, inputs: {} },
+                { time: 400, inputs: {} }
             ];
 
-            // Pre-fill with available inputs
             if (inputs.length > 0) {
+                // Default all to 0 for the reset steps (0 and 400)
                 inputs.forEach(inp => {
                     example[0].inputs[inp] = 0;
-                    example[1].inputs[inp] = 1;
-                    example[2].inputs[inp] = 0;
+                    example[4].inputs[inp] = 0;
                 });
+
+                // Apply pattern to first two inputs if available
+                if (inputs.length >= 2) {
+                    const [inA, inB] = inputs;
+
+                    // 100ns: 0, 1
+                    example[1].inputs[inA] = 0;
+                    example[1].inputs[inB] = 1;
+
+                    // 200ns: 1, 0
+                    example[2].inputs[inA] = 1;
+                    example[2].inputs[inB] = 0;
+
+                    // 300ns: 1, 1
+                    example[3].inputs[inA] = 1;
+                    example[3].inputs[inB] = 1;
+                } else if (inputs.length === 1) {
+                    // Single input toggle
+                    const [inA] = inputs;
+                    example[1].inputs[inA] = 1;
+                    example[2].inputs[inA] = 0;
+                    example[3].inputs[inA] = 1;
+                }
             }
 
             setScript(JSON.stringify(example, null, 2));
