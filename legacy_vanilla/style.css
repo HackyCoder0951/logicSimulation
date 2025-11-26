@@ -1,0 +1,221 @@
+:root {
+    --bg-dark: #0f172a;
+    --bg-panel: #1e293b;
+    --primary: #3b82f6;
+    --primary-glow: rgba(59, 130, 246, 0.5);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --gate-bg: #334155;
+    --gate-border: #475569;
+    --wire-off: #475569;
+    --wire-on: #ef4444; /* Red for active signal */
+    --pin-color: #cbd5e1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 2rem;
+    z-index: 10;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.component-group h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.component-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.component-item {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.component-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 12px var(--primary-glow);
+    transform: translateY(-2px);
+}
+
+.component-item span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.gate-icon {
+    width: 40px;
+    height: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Placeholder for actual SVG icons */
+    background-color: var(--gate-bg); 
+    border-radius: 4px;
+}
+
+/* Workspace */
+.workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.toolbar {
+    height: 60px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none; /* Let clicks pass through to canvas if needed, but buttons need pointer-events: auto */
+}
+
+.tools {
+    pointer-events: auto;
+    display: flex;
+    gap: 1rem;
+    background-color: var(--bg-panel);
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.tool-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    color: var(--text-main);
+    background-color: var(--bg-dark);
+}
+
+.tool-btn.active {
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+#canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    outline: none;
+}
+
+/* Info Panel */
+.info-panel {
+    margin-top: auto;
+    background: rgba(15, 23, 42, 0.5);
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+}
+
+.info-panel.hidden {
+    display: none;
+}
+
+.info-panel h2 {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-panel h2 span {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+#truth-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+#truth-table th, #truth-table td {
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+#truth-table th {
+    background-color: var(--bg-dark);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+#truth-table td {
+    color: var(--text-main);
+}
+
+#truth-table tr:hover td {
+    background-color: rgba(59, 130, 246, 0.1);
+}
