@@ -43,7 +43,9 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Examples**: Load pre-built templates like **Full Adders** (Basic, Half-Adder based, NAND-only) from the dropdown menu.
     - **Multi-Selection**: Hold **Ctrl** (or **Cmd**) and click to select multiple gates, or drag a selection box around them. Move the entire group together.
 - **Circuit Analysis**:
-    - **Analyze**: Click the **Analyze** button to automatically generate a truth table for your entire circuit. It simulates all combinations of Inputs (Switches) and records the Outputs (Bulbs).
+    - **Analyze**: Click the **Analyze** button to automatically generate a truth table for your entire circuit.
+    - **Real-time Highlighting**: The row in the truth table matching your current switch inputs will be highlighted in **Blue**. Toggle switches to see the highlight move instantly.
+    - **Resizable Panel**: Drag the top-left corner of the Truth Table panel to resize it.
 
 ## Running the App
 1. **Development**:
@@ -71,3 +73,5 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Examples**: Load the "Full Adder (Basic Gates)" example and verify it works.
     - **Save/Load**: Save a circuit, clear, and load it back.
     - **Analyze**: Build a simple circuit (e.g., AND gate with 2 switches and 1 bulb) and click "Analyze". Verify the generated truth table matches expected logic.
+    - **Highlighting**: Toggle switches and ensure the correct row in the truth table lights up.
+    - **Resize**: Drag the truth table panel corner and verify it resizes correctly.

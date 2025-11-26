@@ -32,38 +32,46 @@ const truthTables = {
     }
 };
 
-const TruthTable = ({ type, circuitTable }) => {
+const TruthTable = ({ type, circuitTable, currentInputs = [] }) => {
     // Priority: Circuit Table > Selected Gate Table
 
     if (circuitTable) {
         return (
-            <div className="mt-auto bg-slate-900/50 border-t border-slate-700 pt-6 p-4 max-h-64 overflow-y-auto">
-                <h2 className="text-sm text-slate-400 mb-3 flex justify-between items-center">
+            <div className="flex-1 flex flex-col bg-slate-900/50 pt-6 p-4 overflow-hidden">
+                <h2 className="text-sm text-slate-400 mb-3 flex justify-between items-center shrink-0">
                     Truth Table: <span className="text-blue-500 font-bold">Circuit Analysis</span>
                 </h2>
-                <table className="w-full border-collapse text-xs">
-                    <thead>
-                        <tr>
-                            {circuitTable.inputs.map((label, i) => (
-                                <th key={`in-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
-                            ))}
-                            {circuitTable.outputs.map((label, i) => (
-                                <th key={`out-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {circuitTable.rows.map((row, i) => (
-                            <tr key={i} className="hover:bg-blue-500/10">
-                                {row.map((val, j) => (
-                                    <td key={j} className={`p-2 text-center border border-slate-700 ${j < circuitTable.inputs.length ? 'text-slate-400' : 'text-blue-400 font-bold'}`}>
-                                        {val}
-                                    </td>
+                <div className="flex-1 overflow-y-auto">
+                    <table className="w-full border-collapse text-xs">
+                        <thead className="sticky top-0 z-10">
+                            <tr>
+                                {circuitTable.inputs.map((label, i) => (
+                                    <th key={`in-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
+                                ))}
+                                {circuitTable.outputs.map((label, i) => (
+                                    <th key={`out-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
                                 ))}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {circuitTable.rows.map((row, i) => {
+                                // Check if this row matches current inputs
+                                const isMatch = currentInputs.length === circuitTable.inputs.length &&
+                                    row.slice(0, circuitTable.inputs.length).every((val, idx) => val === currentInputs[idx]);
+
+                                return (
+                                    <tr key={i} className={`transition-colors duration-150 ${isMatch ? 'bg-blue-600/30 ring-1 ring-blue-500/50' : 'hover:bg-blue-500/10'}`}>
+                                        {row.map((val, j) => (
+                                            <td key={j} className={`p-2 text-center border border-slate-700 ${j < circuitTable.inputs.length ? 'text-slate-400' : 'text-blue-400 font-bold'} ${isMatch ? 'text-white' : ''}`}>
+                                                {val}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }

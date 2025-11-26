@@ -5,7 +5,7 @@ import { Gate } from '@/lib/Gate';
 import { Wire } from '@/lib/Wire';
 import { EXAMPLES } from '@/lib/examples';
 
-const CanvasWorkspace = ({ onSelectionChange, onAnalyze }) => {
+const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -88,6 +88,15 @@ const CanvasWorkspace = ({ onSelectionChange, onAnalyze }) => {
             gatesRef.current.forEach(gate => gate.compute(time));
             wiresRef.current.forEach(wire => wire.update());
             gatesRef.current.forEach(gate => gate.compute(time));
+
+            // Notify Input States for Truth Table Highlighting
+            if (onInputStateChange) {
+                const inputs = gatesRef.current.filter(g => g.type === 'SWITCH').sort((a, b) => a.y - b.y);
+                if (inputs.length > 0) {
+                    const currentStates = inputs.map(g => g.state ? 1 : 0);
+                    onInputStateChange(currentStates);
+                }
+            }
 
             // Draw Wires
             wiresRef.current.forEach(wire => wire.draw(ctx));
