@@ -14,6 +14,7 @@ The application has been migrated to a **Next.js** architecture and expanded wit
 - `components/Sidebar.js`: Draggable gate components (Basic, Arithmetic, Plexers, I/O).
 - `components/CanvasWorkspace.js`: Core simulation engine and canvas rendering.
 - `components/TruthTable.js`: Dynamic truth table display.
+- `components/WaveformViewer.js`: Real-time signal history visualization.
 - `lib/Gate.js`: Logic gate class definition with support for complex components.
 - `lib/Wire.js`: Wire connection class definition.
 - `lib/examples.js`: Pre-built circuit templates.
@@ -46,6 +47,7 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Analyze**: Click the **Analyze** button to automatically generate a truth table for your entire circuit.
     - **Real-time Highlighting**: The row in the truth table matching your current switch inputs will be highlighted in **Blue**. Toggle switches to see the highlight move instantly.
     - **Resizable Panel**: Drag the top-left corner of the Truth Table panel to resize it.
+    - **Waveform Viewer**: Switch to the **Waveform** tab to see a real-time timing diagram of your signals, similar to ModelSim.
 
 ## Running the App
 1. **Development**:
@@ -75,3 +77,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Analyze**: Build a simple circuit (e.g., AND gate with 2 switches and 1 bulb) and click "Analyze". Verify the generated truth table matches expected logic.
     - **Highlighting**: Toggle switches and ensure the correct row in the truth table lights up.
     - **Resize**: Drag the truth table panel corner and verify it resizes correctly.
+    - **Waveform**: Switch to the Waveform tab. Toggle switches or use a Clock. Verify the green lines trace the signal history.

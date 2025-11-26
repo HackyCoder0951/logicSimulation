@@ -43,19 +43,33 @@ const WaveformViewer = ({ history, signals }) => {
             ctx.lineWidth = 2;
             ctx.beginPath();
 
-            // Draw from right to left (newest at right)
-            // history[0] is newest
+            // Draw from left to right (oldest at left)
+            // history[0] is newest, history[length-1] is oldest
+
+            const contentWidth = history.length * timeScale;
+            let startX = 0;
+
+            // If content fits, start at 0 (Left). If not, scroll (anchor newest to Right)
+            if (contentWidth > width) {
+                startX = width - contentWidth;
+            }
+
             let prevVal = null;
 
-            for (let i = 0; i < history.length; i++) {
-                const x = width - (i * timeScale);
-                if (x < 0) break;
+            // Iterate from oldest to newest for drawing path correctly
+            for (let i = history.length - 1; i >= 0; i--) {
+                const x = startX + ((history.length - 1 - i) * timeScale);
+
+                // Optimization: Don't draw if off-screen left
+                if (x < -timeScale) continue;
+                // Stop if off-screen right
+                if (x > width) break;
 
                 const frame = history[i];
                 const val = frame[signal.id]; // 0 or 1
                 const y = val ? yBase - 10 : yBase;
 
-                if (i === 0) {
+                if (prevVal === null) {
                     ctx.moveTo(x, y);
                 } else {
                     ctx.lineTo(x, prevVal !== val ? (prevVal ? yBase - 10 : yBase) : y); // Vertical line
@@ -74,13 +88,16 @@ const WaveformViewer = ({ history, signals }) => {
             ctx.stroke();
         });
 
-        // Time Cursor (Current)
-        ctx.strokeStyle = '#fbbf24'; // amber-400
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(width - 1, 0);
-        ctx.lineTo(width - 1, height);
-        ctx.stroke();
+        // Time Cursor (Current) - Always at the newest point
+        const cursorX = startX + (history.length - 1) * timeScale;
+        if (cursorX >= 0 && cursorX <= width) {
+            ctx.strokeStyle = '#fbbf24'; // amber-400
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cursorX, 0);
+            ctx.lineTo(cursorX, height);
+            ctx.stroke();
+        }
 
     }, [history, signals]);
 
