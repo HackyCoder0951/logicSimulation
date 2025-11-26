@@ -5,7 +5,7 @@ import { Gate } from '@/lib/Gate';
 import { Wire } from '@/lib/Wire';
 import { EXAMPLES } from '@/lib/examples';
 
-const CanvasWorkspace = ({ onSelectionChange }) => {
+const CanvasWorkspace = ({ onSelectionChange, onAnalyze }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -524,6 +524,64 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
         }
     };
 
+    const generateTruthTable = () => {
+        const inputs = gatesRef.current.filter(g => g.type === 'SWITCH').sort((a, b) => a.y - b.y);
+        const outputs = gatesRef.current.filter(g => g.type === 'BULB').sort((a, b) => a.y - b.y);
+
+        if (inputs.length === 0 || outputs.length === 0) {
+            alert("Need at least 1 Switch and 1 Bulb to analyze.");
+            return;
+        }
+
+        if (inputs.length > 8) {
+            if (!confirm(`Analyzing ${inputs.length} inputs will generate ${Math.pow(2, inputs.length)} rows. This might be slow. Continue?`)) {
+                return;
+            }
+        }
+
+        const rows = [];
+        const combinations = Math.pow(2, inputs.length);
+
+        // Save current state
+        const savedStates = inputs.map(g => g.state);
+
+        for (let i = 0; i < combinations; i++) {
+            // Set Inputs
+            inputs.forEach((inp, idx) => {
+                // MSB first or LSB first? Let's do MSB at top (index 0)
+                // If i=1 (001), last input should be 1.
+                // So inputs[last] is LSB.
+                const bit = (i >> (inputs.length - 1 - idx)) & 1;
+                inp.state = bit === 1;
+            });
+
+            // Simulate (Run enough cycles to stabilize)
+            // Complex circuits might need more cycles. 50 should be safe for DAGs.
+            for (let cycle = 0; cycle < 50; cycle++) {
+                gatesRef.current.forEach(gate => gate.compute());
+                wiresRef.current.forEach(wire => wire.update());
+            }
+            gatesRef.current.forEach(gate => gate.compute()); // Final compute
+
+            // Record Output
+            const row = [
+                ...inputs.map(g => g.state ? 1 : 0),
+                ...outputs.map(g => g.state ? 1 : 0)
+            ];
+            rows.push(row);
+        }
+
+        // Restore state
+        inputs.forEach((inp, idx) => inp.state = savedStates[idx]);
+
+        // Send data
+        onAnalyze({
+            inputs: inputs.map(g => g.label || 'In'),
+            outputs: outputs.map(g => g.label || 'Out'),
+            rows: rows
+        });
+    };
+
     return (
         <div className="flex-1 flex flex-col relative h-full">
             <div className="h-16 px-8 flex items-center justify-between pointer-events-none absolute top-0 right-0 w-full z-10">
@@ -553,6 +611,12 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                         className="text-slate-400 hover:text-red-400 px-3 py-1 transition-colors font-medium text-xs"
                     >
                         Clear
+                    </button>
+                    <button
+                        onClick={generateTruthTable}
+                        className="bg-blue-600 text-white px-3 py-1 rounded shadow-[0_0_12px_rgba(59,130,246,0.5)] font-medium text-xs hover:bg-blue-500 transition-all"
+                    >
+                        Analyze
                     </button>
                 </div>
             </div>
