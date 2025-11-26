@@ -452,8 +452,8 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
             const newGates = data.gates.map(g => {
                 const gate = new Gate(g.x, g.y, g.type);
                 gate.id = g.id;
-                gate.label = g.label;
-                gate.state = g.state;
+                if (g.label) gate.label = g.label;
+                if (g.state !== undefined) gate.state = g.state;
                 return gate;
             });
 
