@@ -32,7 +32,42 @@ const truthTables = {
     }
 };
 
-const TruthTable = ({ type }) => {
+const TruthTable = ({ type, circuitTable }) => {
+    // Priority: Circuit Table > Selected Gate Table
+
+    if (circuitTable) {
+        return (
+            <div className="mt-auto bg-slate-900/50 border-t border-slate-700 pt-6 p-4 max-h-64 overflow-y-auto">
+                <h2 className="text-sm text-slate-400 mb-3 flex justify-between items-center">
+                    Truth Table: <span className="text-blue-500 font-bold">Circuit Analysis</span>
+                </h2>
+                <table className="w-full border-collapse text-xs">
+                    <thead>
+                        <tr>
+                            {circuitTable.inputs.map((label, i) => (
+                                <th key={`in-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
+                            ))}
+                            {circuitTable.outputs.map((label, i) => (
+                                <th key={`out-${i}`} className="p-2 text-center border border-slate-700 bg-slate-900 text-slate-400 font-semibold">{label}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {circuitTable.rows.map((row, i) => (
+                            <tr key={i} className="hover:bg-blue-500/10">
+                                {row.map((val, j) => (
+                                    <td key={j} className={`p-2 text-center border border-slate-700 ${j < circuitTable.inputs.length ? 'text-slate-400' : 'text-blue-400 font-bold'}`}>
+                                        {val}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
     if (!type) return null;
 
     // If no table defined, show generic info

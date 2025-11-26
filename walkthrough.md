@@ -42,6 +42,8 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Export/Import**: Download your circuit as a `.json` file or upload one.
     - **Examples**: Load pre-built templates like **Full Adders** (Basic, Half-Adder based, NAND-only) from the dropdown menu.
     - **Multi-Selection**: Hold **Ctrl** (or **Cmd**) and click to select multiple gates, or drag a selection box around them. Move the entire group together.
+- **Circuit Analysis**:
+    - **Analyze**: Click the **Analyze** button to automatically generate a truth table for your entire circuit. It simulates all combinations of Inputs (Switches) and records the Outputs (Bulbs).
 
 ## Running the App
 1. **Development**:
@@ -68,3 +70,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Inputs**: Click unconnected inputs to toggle. Click connected inputs to move wires.
     - **Examples**: Load the "Full Adder (Basic Gates)" example and verify it works.
     - **Save/Load**: Save a circuit, clear, and load it back.
+    - **Analyze**: Build a simple circuit (e.g., AND gate with 2 switches and 1 bulb) and click "Analyze". Verify the generated truth table matches expected logic.
