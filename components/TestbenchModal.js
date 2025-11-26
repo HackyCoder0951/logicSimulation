@@ -1,8 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const TestbenchModal = ({ isOpen, onClose, onRun, inputs }) => {
     const [script, setScript] = useState('');
     const [error, setError] = useState(null);
+    const [size, setSize] = useState({ width: 600, height: 500 });
+    const isResizingRef = useRef(false);
+    const lastMouseRef = useRef({ x: 0, y: 0 });
+
+    const handleResizeStart = (e) => {
+        e.preventDefault();
+        isResizingRef.current = true;
+        lastMouseRef.current = { x: e.clientX, y: e.clientY };
+        document.addEventListener('mousemove', handleResizeMove);
+        document.addEventListener('mouseup', handleResizeEnd);
+    };
+
+    const handleResizeMove = (e) => {
+        if (!isResizingRef.current) return;
+        const dx = e.clientX - lastMouseRef.current.x;
+        const dy = e.clientY - lastMouseRef.current.y;
+
+        setSize(prev => ({
+            width: Math.max(400, prev.width + dx),
+            height: Math.max(300, prev.height + dy)
+        }));
+
+        lastMouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleResizeEnd = () => {
+        isResizingRef.current = false;
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+    };
 
     // Default example script
     useEffect(() => {
@@ -41,7 +71,15 @@ const TestbenchModal = ({ isOpen, onClose, onRun, inputs }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[600px] max-w-full flex flex-col max-h-[80vh] resize-both overflow-auto min-w-[400px] min-h-[300px]">
+            <div
+                className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col relative"
+                style={{ width: size.width, height: size.height }}
+            >
+                {/* Resize Handle */}
+                <div
+                    className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20 hover:bg-blue-500/50 rounded-br"
+                    onMouseDown={handleResizeStart}
+                />
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-white">Testbench Runner</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
