@@ -93,7 +93,7 @@ export default function Home() {
 
             <main className="flex-1 flex flex-col relative">
                 {/* Toolbar Extra */}
-                <div className="absolute top-4 left-4 z-10">
+                <div className="absolute top-4 right-44 z-10">
                     <button
                         onClick={() => setIsTestbenchOpen(true)}
                         className="bg-purple-600 text-white px-4 py-2 rounded-md shadow-lg font-medium hover:bg-purple-500 transition-all text-sm"
@@ -110,14 +110,8 @@ export default function Home() {
                 />
 
                 {/* Floating Panel */}
-                <div
-                    className="absolute bottom-6 right-6 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col transition-none"
-                    style={{ width: panelSize.width, height: panelSize.height }}
-                >
-                    {/* Resize Handle */}
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div
-                        className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20 hover:bg-blue-500/50 rounded-br"
-                        onMouseDown={handleResizeStart}
                     />
 
                     {/* Tabs */}

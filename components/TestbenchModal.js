@@ -41,7 +41,7 @@ const TestbenchModal = ({ isOpen, onClose, onRun, inputs }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[600px] max-w-full flex flex-col max-h-[80vh]">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[600px] max-w-full flex flex-col max-h-[80vh] resize-both overflow-auto min-w-[400px] min-h-[300px]">
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-white">Testbench Runner</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
