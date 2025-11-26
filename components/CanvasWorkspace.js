@@ -108,9 +108,26 @@ const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange, onS
                     }
                 });
 
-                // Also send signal metadata periodically (or just once, but here we do it implicitly via ID)
-                // We'll let the parent handle the history buffer, we just send the current frame
-                onSignalHistoryUpdate(signals, gatesRef.current.filter(g => g.type === 'SWITCH' || g.type === 'BULB' || g.type === 'CLOCK'));
+                // Send signal metadata with unique names
+                // We need to ensure unique labels for the testbench to work correctly
+                const usedLabels = new Set();
+                const signalsList = gatesRef.current
+                    .filter(g => g.type === 'SWITCH' || g.type === 'BULB' || g.type === 'CLOCK')
+                    .map(g => {
+                        let label = g.label || g.type;
+                        // If duplicate or empty, append ID segment
+                        if (!g.label || usedLabels.has(label)) {
+                            label = `${label}_${g.id.substr(0, 4)}`;
+                        }
+                        usedLabels.add(label);
+
+                        // Store the resolved label on the gate temporarily for runTestbench to match? 
+                        // No, runTestbench needs to reconstruct this logic or we need to persist it.
+                        // Better to just use this label for the UI.
+                        return { id: g.id, label: label, type: g.type };
+                    });
+
+                onSignalHistoryUpdate(signals, signalsList);
             }
 
             // Draw Wires
@@ -607,11 +624,18 @@ const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange, onS
     };
 
     const runTestbench = (script) => {
-        // 1. Identify Inputs
+        // 1. Identify Inputs and Map Labels
         const inputs = gatesRef.current.filter(g => g.type === 'SWITCH');
         const inputMap = {};
+        const usedLabels = new Set();
+
         inputs.forEach(g => {
-            if (g.label) inputMap[g.label] = g;
+            let label = g.label || g.type;
+            if (!g.label || usedLabels.has(label)) {
+                label = `${label}_${g.id.substr(0, 4)}`;
+            }
+            usedLabels.add(label);
+            inputMap[label] = g;
         });
 
         // 2. Determine Duration
