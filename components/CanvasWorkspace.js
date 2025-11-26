@@ -161,6 +161,28 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                     wiringStartPinIndexRef.current = pin.index;
                     tempWireEndRef.current = { x: mouseX, y: mouseY };
                     return;
+                } else if (pin.type === 'input') {
+                    // Check if connected
+                    const wireIndex = wiresRef.current.findIndex(w => w.endGate === gate && w.endPinIndex === pin.index);
+
+                    if (wireIndex !== -1) {
+                        // Connected: Detach and start wiring
+                        const wire = wiresRef.current[wireIndex];
+                        wiresRef.current.splice(wireIndex, 1); // Remove wire
+
+                        isWiringRef.current = true;
+                        wiringStartGateRef.current = wire.startGate;
+                        wiringStartPinIndexRef.current = wire.startPinIndex;
+                        tempWireEndRef.current = { x: mouseX, y: mouseY };
+
+                        // Reset input value
+                        gate.inputs[pin.index].value = 0;
+                        return;
+                    } else {
+                        // Not Connected: Toggle Value
+                        gate.inputs[pin.index].value = gate.inputs[pin.index].value ? 0 : 1;
+                        return;
+                    }
                 }
             }
         }

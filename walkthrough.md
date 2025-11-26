@@ -32,6 +32,10 @@ The application has been migrated to a **Next.js** architecture and expanded wit
 - **Navigation**:
     - **Zoom**: Use the **Mouse Wheel** to zoom in and out of the workspace.
     - **Pan**: Hold **Middle Mouse Button** (or **Shift + Left Click**) and drag to move the workspace.
+- **Dynamic Inputs & Rewiring**:
+    - **Manual Toggle**: Click any unconnected input pin to toggle it between 0 and 1.
+    - **Rewiring**: Click a connected input pin to detach the wire and move it to another component.
+    - **Visuals**: Pins light up Red when High (1). Switches show their state text.
 
 ## Running the App
 1. **Development**:
@@ -55,3 +59,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Truth Tables**: Select new components to see their tables.
     - **Deletion**: Select a gate and press Delete. Right-click a connected pin to clear wires.
     - **Zoom/Pan**: Use mouse wheel to zoom, middle click to pan. Verify gates stay in correct relative positions.
+    - **Inputs**: Click unconnected inputs to toggle. Click connected inputs to move wires.
