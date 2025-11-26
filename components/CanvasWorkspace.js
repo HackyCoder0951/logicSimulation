@@ -5,7 +5,7 @@ import { Gate } from '@/lib/Gate';
 import { Wire } from '@/lib/Wire';
 import { EXAMPLES } from '@/lib/examples';
 
-const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange }) => {
+const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange, onSignalHistoryUpdate }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -96,6 +96,21 @@ const CanvasWorkspace = ({ onSelectionChange, onAnalyze, onInputStateChange }) =
                     const currentStates = inputs.map(g => g.state ? 1 : 0);
                     onInputStateChange(currentStates);
                 }
+            }
+
+            // Record History for Waveform
+            if (onSignalHistoryUpdate) {
+                // Collect all inputs and outputs
+                const signals = {};
+                gatesRef.current.forEach(g => {
+                    if (g.type === 'SWITCH' || g.type === 'BULB' || g.type === 'CLOCK') {
+                        signals[g.id] = g.state ? 1 : 0;
+                    }
+                });
+
+                // Also send signal metadata periodically (or just once, but here we do it implicitly via ID)
+                // We'll let the parent handle the history buffer, we just send the current frame
+                onSignalHistoryUpdate(signals, gatesRef.current.filter(g => g.type === 'SWITCH' || g.type === 'BULB' || g.type === 'CLOCK'));
             }
 
             // Draw Wires
