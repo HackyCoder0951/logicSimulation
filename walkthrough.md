@@ -26,6 +26,9 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Arithmetic**: Half Adder, Full Adder, Comparator, ALU.
     - **Plexers**: Multiplexer (2:1), Decoder (2:4).
     - **Timing**: Clock signal generator.
+- **Deletion**:
+    - **Delete Component**: Select a component and press `Delete` or `Backspace`.
+    - **Remove Wires**: Right-click on a pin to disconnect all wires attached to it.
 
 ## Running the App
 1. **Development**:
@@ -47,3 +50,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **Adders**: Connect inputs to a Full Adder and verify Sum/Cout logic.
     - **ALU**: Verify basic operations.
     - **Truth Tables**: Select new components to see their tables.
+    - **Deletion**: Select a gate and press Delete. Right-click a connected pin to clear wires.

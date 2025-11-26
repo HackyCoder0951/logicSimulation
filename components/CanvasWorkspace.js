@@ -21,10 +21,31 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
     const tempWireEndRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const selectedGate = gatesRef.current.find(g => g.selected);
+                if (selectedGate) {
+                    // Remove wires connected to this gate
+                    wiresRef.current = wiresRef.current.filter(w =>
+                        w.startGate !== selectedGate && w.endGate !== selectedGate
+                    );
+                    // Remove gate
+                    gatesRef.current = gatesRef.current.filter(g => g !== selectedGate);
+                    onSelectionChange(null);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onSelectionChange]);
+
+    useEffect(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
         const ctx = canvas.getContext('2d');
 
+        // ... existing resize and loop logic ...
         const resize = () => {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -188,6 +209,28 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
         draggedGateRef.current = null;
     };
 
+    const handleContextMenu = (e) => {
+        e.preventDefault();
+        const rect = canvasRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Check pins to disconnect
+        for (let gate of gatesRef.current) {
+            const pin = gate.getPinAt(mouseX, mouseY);
+            if (pin) {
+                if (pin.type === 'input') {
+                    // Remove wire connected to this input
+                    wiresRef.current = wiresRef.current.filter(w => !(w.endGate === gate && w.endPinIndex === pin.index));
+                } else if (pin.type === 'output') {
+                    // Remove wires connected to this output
+                    wiresRef.current = wiresRef.current.filter(w => !(w.startGate === gate && w.startPinIndex === pin.index));
+                }
+                return;
+            }
+        }
+    };
+
     const clearCanvas = () => {
         gatesRef.current = [];
         wiresRef.current = [];
@@ -220,7 +263,9 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
+                    onContextMenu={handleContextMenu}
                     className="block outline-none"
+                    tabIndex={0} // Make canvas focusable for keyboard events
                 />
             </div>
         </div>
