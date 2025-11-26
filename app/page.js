@@ -93,7 +93,7 @@ export default function Home() {
 
             <main className="flex-1 flex flex-col relative">
                 {/* Toolbar Extra */}
-                <div className="absolute top-4 right-44 z-10">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
                     <button
                         onClick={() => setIsTestbenchOpen(true)}
                         className="bg-purple-600 text-white px-4 py-2 rounded-md shadow-lg font-medium hover:bg-purple-500 transition-all text-sm"
