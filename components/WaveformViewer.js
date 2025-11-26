@@ -30,6 +30,13 @@ const WaveformViewer = ({ history, signals }) => {
         const padding = 10;
         const timeScale = 2; // Pixels per frame
 
+        // Calculate startX globally for all signals
+        const contentWidth = history.length * timeScale;
+        let startX = 0;
+        if (contentWidth > width) {
+            startX = width - contentWidth;
+        }
+
         signals.forEach((signal, index) => {
             const yBase = index * rowHeight + padding + 20;
 
@@ -45,14 +52,6 @@ const WaveformViewer = ({ history, signals }) => {
 
             // Draw from left to right (oldest at left)
             // history[0] is newest, history[length-1] is oldest
-
-            const contentWidth = history.length * timeScale;
-            let startX = 0;
-
-            // If content fits, start at 0 (Left). If not, scroll (anchor newest to Right)
-            if (contentWidth > width) {
-                startX = width - contentWidth;
-            }
 
             let prevVal = null;
 
