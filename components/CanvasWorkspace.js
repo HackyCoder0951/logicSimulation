@@ -20,6 +20,20 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
     const wiringStartPinIndexRef = useRef(null);
     const tempWireEndRef = useRef({ x: 0, y: 0 });
 
+    // Viewport State
+    const transformRef = useRef({ x: 0, y: 0, zoom: 1 });
+    const isPanningRef = useRef(false);
+    const lastMouseRef = useRef({ x: 0, y: 0 });
+
+    // Coordinate Helpers
+    const toWorld = (sx, sy) => {
+        const { x, y, zoom } = transformRef.current;
+        return {
+            x: (sx - x) / zoom,
+            y: (sy - y) / zoom
+        };
+    };
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -58,6 +72,11 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
         const loop = (time) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            const { x, y, zoom } = transformRef.current;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(zoom, zoom);
+
             // Logic Updates
             gatesRef.current.forEach(gate => gate.compute(time));
             wiresRef.current.forEach(wire => wire.update());
@@ -90,6 +109,8 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
             // Draw Gates
             gatesRef.current.forEach(gate => gate.draw(ctx));
 
+            ctx.restore(); // Restore transform
+
             animationFrameId = requestAnimationFrame(loop);
         };
         loop();
@@ -106,8 +127,9 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
         if (!type) return;
 
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const { x, y } = toWorld(screenX, screenY);
 
         const newGate = new Gate(x - 40, y - 25, type);
         gatesRef.current.push(newGate);
@@ -117,8 +139,17 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
 
     const handleMouseDown = (e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+
+        // Panning (Middle Click or Shift+Click)
+        if (e.button === 1 || (e.button === 0 && e.getModifierState('Shift'))) { // Shift+Click for pan alternative
+            isPanningRef.current = true;
+            lastMouseRef.current = { x: screenX, y: screenY };
+            return;
+        }
+
+        const { x: mouseX, y: mouseY } = toWorld(screenX, screenY);
 
         // Check pins
         for (let gate of gatesRef.current) {
@@ -170,8 +201,19 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
 
     const handleMouseMove = (e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+
+        if (isPanningRef.current) {
+            const dx = screenX - lastMouseRef.current.x;
+            const dy = screenY - lastMouseRef.current.y;
+            transformRef.current.x += dx;
+            transformRef.current.y += dy;
+            lastMouseRef.current = { x: screenX, y: screenY };
+            return;
+        }
+
+        const { x: mouseX, y: mouseY } = toWorld(screenX, screenY);
 
         if (isDraggingRef.current && draggedGateRef.current) {
             draggedGateRef.current.x = mouseX - dragOffsetRef.current.x;
@@ -185,8 +227,11 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
 
     const handleMouseUp = (e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const { x: mouseX, y: mouseY } = toWorld(screenX, screenY);
+
+        isPanningRef.current = false;
 
         if (isWiringRef.current) {
             for (let gate of gatesRef.current) {
@@ -212,8 +257,9 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
     const handleContextMenu = (e) => {
         e.preventDefault();
         const rect = canvasRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const { x: mouseX, y: mouseY } = toWorld(screenX, screenY);
 
         // Check pins to disconnect
         for (let gate of gatesRef.current) {
@@ -229,6 +275,27 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                 return;
             }
         }
+    };
+
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const rect = canvasRef.current.getBoundingClientRect();
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+
+        const zoomIntensity = 0.1;
+        const delta = e.deltaY > 0 ? -zoomIntensity : zoomIntensity;
+        const newZoom = Math.min(Math.max(transformRef.current.zoom + delta, 0.1), 5);
+
+        // Zoom towards mouse pointer
+        // world = (screen - x) / zoom
+        // newX = screen - world * newZoom
+        const worldX = (screenX - transformRef.current.x) / transformRef.current.zoom;
+        const worldY = (screenY - transformRef.current.y) / transformRef.current.zoom;
+
+        transformRef.current.x = screenX - worldX * newZoom;
+        transformRef.current.y = screenY - worldY * newZoom;
+        transformRef.current.zoom = newZoom;
     };
 
     const clearCanvas = () => {
@@ -264,6 +331,7 @@ const CanvasWorkspace = ({ onSelectionChange }) => {
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onContextMenu={handleContextMenu}
+                    onWheel={handleWheel}
                     className="block outline-none"
                     tabIndex={0} // Make canvas focusable for keyboard events
                 />

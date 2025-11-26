@@ -29,6 +29,9 @@ The application has been migrated to a **Next.js** architecture and expanded wit
 - **Deletion**:
     - **Delete Component**: Select a component and press `Delete` or `Backspace`.
     - **Remove Wires**: Right-click on a pin to disconnect all wires attached to it.
+- **Navigation**:
+    - **Zoom**: Use the **Mouse Wheel** to zoom in and out of the workspace.
+    - **Pan**: Hold **Middle Mouse Button** (or **Shift + Left Click**) and drag to move the workspace.
 
 ## Running the App
 1. **Development**:
@@ -51,3 +54,4 @@ The application has been migrated to a **Next.js** architecture and expanded wit
     - **ALU**: Verify basic operations.
     - **Truth Tables**: Select new components to see their tables.
     - **Deletion**: Select a gate and press Delete. Right-click a connected pin to clear wires.
+    - **Zoom/Pan**: Use mouse wheel to zoom, middle click to pan. Verify gates stay in correct relative positions.
