@@ -43,6 +43,9 @@ export default function Home() {
         }
     };
 
+    // Sidebar State
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     // Panel Size State
     const [panelSize, setPanelSize] = useState({ width: 320, height: 300 });
     const isResizingRef = useRef(false);
@@ -54,25 +57,33 @@ export default function Home() {
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
         document.addEventListener('mousemove', handleResizeMove);
         document.addEventListener('mouseup', handleResizeEnd);
+        document.addEventListener('touchmove', handleResizeMove);
+        document.addEventListener('touchend', handleResizeEnd);
     };
 
     const handleResizeMove = (e) => {
         if (!isResizingRef.current) return;
-        const dx = e.clientX - lastMouseRef.current.x;
-        const dy = e.clientY - lastMouseRef.current.y;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const dx = clientX - lastMouseRef.current.x;
+        const dy = clientY - lastMouseRef.current.y;
 
         setPanelSize(prev => ({
             width: Math.max(200, prev.width - dx), // Dragging left increases width
             height: Math.max(150, prev.height - dy) // Dragging up increases height
         }));
 
-        lastMouseRef.current = { x: e.clientX, y: e.clientY };
+        lastMouseRef.current = { x: clientX, y: clientY };
     };
 
     const handleResizeEnd = () => {
         isResizingRef.current = false;
         document.removeEventListener('mousemove', handleResizeMove);
         document.removeEventListener('mouseup', handleResizeEnd);
+        document.removeEventListener('touchmove', handleResizeMove);
+        document.removeEventListener('touchend', handleResizeEnd);
     };
 
     const handleRunTestbench = (script) => {
@@ -89,16 +100,32 @@ export default function Home() {
 
     return (
         <div className="flex h-screen w-full bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-blue-500/30">
-            <Sidebar />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-            <main className="flex-1 flex flex-col relative">
-                {/* Toolbar Extra */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+            <main className="flex-1 flex flex-col relative w-full h-full overflow-hidden">
+                {/* Mobile Header / Toolbar */}
+                <div className="absolute top-4 left-4 z-30 flex items-center gap-4">
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="md:hidden p-2 bg-slate-800 rounded-md text-slate-200 shadow-lg border border-slate-700"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Run Testbench Button */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-max">
                     <button
                         onClick={() => setIsTestbenchOpen(true)}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-md shadow-lg font-medium hover:bg-purple-500 transition-all text-sm"
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md shadow-lg font-medium hover:bg-purple-500 transition-all text-sm flex items-center gap-2"
                     >
-                        Run Testbench
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                        </svg>
+                        <span className="hidden sm:inline">Run Testbench</span>
+                        <span className="sm:hidden">Run</span>
                     </button>
                 </div>
 
@@ -111,17 +138,21 @@ export default function Home() {
 
                 {/* Floating Panel */}
                 <div
-                    className="absolute bottom-6 right-6 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col transition-none"
-                    style={{ width: panelSize.width, height: panelSize.height }}
+                    className="absolute bottom-0 right-0 md:bottom-6 md:right-6 bg-slate-900/95 backdrop-blur-md border-t md:border border-slate-700 md:rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all z-20"
+                    style={{
+                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : panelSize.width,
+                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '35vh' : panelSize.height,
+                        maxHeight: '80vh'
+                    }}
                 >
-                    {/* Resize Handle */}
+                    {/* Resize Handle (Desktop Only) */}
                     <div
-                        className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20 hover:bg-blue-500/50 rounded-br"
+                        className="hidden md:block absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20 hover:bg-blue-500/50 rounded-br"
                         onMouseDown={handleResizeStart}
                     />
 
                     {/* Tabs */}
-                    <div className="flex border-b border-slate-700 bg-slate-800/50">
+                    <div className="flex border-b border-slate-700 bg-slate-800/50 shrink-0">
                         <button
                             onClick={() => setActiveTab('table')}
                             className={`flex-1 py-2 text-xs font-medium transition-colors ${activeTab === 'table' ? 'text-blue-400 bg-slate-800 border-b-2 border-blue-500' : 'text-slate-400 hover:text-slate-200'}`}

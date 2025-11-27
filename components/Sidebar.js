@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
     const handleDragStart = (e, type) => {
         e.dataTransfer.setData('type', type);
     };
@@ -21,45 +21,70 @@ const Sidebar = () => {
     );
 
     return (
-        <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col p-6 gap-6 z-10 shadow-xl h-full overflow-y-auto">
-            <div className="logo shrink-0">
-                <h1 className="text-2xl font-bold text-slate-50">Logic<span className="text-blue-500">Sim</span></h1>
-            </div>
+        <>
+            {/* Mobile Backdrop */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+                    onClick={onClose}
+                />
+            )}
 
-            <div className="component-group">
-                <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Basic Gates</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    {['AND', 'OR', 'NOT', 'NAND', 'NOR', 'XOR', 'XNOR'].map(t => renderItem(t))}
+            {/* Sidebar Container */}
+            <aside className={`
+                fixed md:static inset-y-0 left-0 z-50
+                w-64 bg-slate-800 border-r border-slate-700 
+                flex flex-col p-6 gap-6 shadow-xl h-full overflow-y-auto
+                transition-transform duration-300 ease-in-out
+                ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
+                <div className="logo shrink-0 flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-slate-50">Logic<span className="text-blue-500">Sim</span></h1>
+                    <button
+                        onClick={onClose}
+                        className="md:hidden text-slate-400 hover:text-white"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-            </div>
 
-            <div className="component-group">
-                <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Arithmetic & Logic</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    {renderItem('HALF_ADDER', 'Half Adder')}
-                    {renderItem('FULL_ADDER', 'Full Adder')}
-                    {renderItem('COMPARATOR', 'Comparator')}
-                    {renderItem('ALU_1BIT', 'ALU (1-bit)')}
+                <div className="component-group">
+                    <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Basic Gates</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {['AND', 'OR', 'NOT', 'NAND', 'NOR', 'XOR', 'XNOR'].map(t => renderItem(t))}
+                    </div>
                 </div>
-            </div>
 
-            <div className="component-group">
-                <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Plexers</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    {renderItem('MUX_2_1', 'Mux 2:1')}
-                    {renderItem('DECODER_2_4', 'Decoder 2:4')}
+                <div className="component-group">
+                    <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Arithmetic & Logic</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {renderItem('HALF_ADDER', 'Half Adder')}
+                        {renderItem('FULL_ADDER', 'Full Adder')}
+                        {renderItem('COMPARATOR', 'Comparator')}
+                        {renderItem('ALU_1BIT', 'ALU (1-bit)')}
+                    </div>
                 </div>
-            </div>
 
-            <div className="component-group">
-                <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">I/O & Timing</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    {renderItem('SWITCH', 'Switch')}
-                    {renderItem('BULB', 'Light Bulb')}
-                    {renderItem('CLOCK', 'Clock')}
+                <div className="component-group">
+                    <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">Plexers</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {renderItem('MUX_2_1', 'Mux 2:1')}
+                        {renderItem('DECODER_2_4', 'Decoder 2:4')}
+                    </div>
                 </div>
-            </div>
-        </aside>
+
+                <div className="component-group">
+                    <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-semibold">I/O & Timing</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {renderItem('SWITCH', 'Switch')}
+                        {renderItem('BULB', 'Light Bulb')}
+                        {renderItem('CLOCK', 'Clock')}
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 };
 
